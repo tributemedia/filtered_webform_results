@@ -1,0 +1,69 @@
+<?php
+
+// =============================
+// = Implements hook_install() =
+// =============================
+
+function filtered_form_results_install() {
+  global $user;
+  
+  $node = new stdClass(); // We create a new node object
+    $node->type = "page"; // Or any other content type you want
+    $node->title = "Webform Reports";
+    $node->language = LANGUAGE_NONE; // Or any language code if Locale module is enabled. More on this below *
+    $node->uid = $user->uid; // Or any id you wish
+    $node->path = array('alias' => 'admin/webform-reports'); // Setting a node path
+    node_object_prepare($node); // Set some default values.
+  
+  // Return all nids of nodes of type "webform".
+  $nids = db_select('node', 'n')
+      ->fields('n', array('nid'))
+      ->fields('n', array('type'))
+      ->condition('n.type', 'landing_page')
+      ->execute()
+      ->fetchCol(); // returns an indexed array
+
+  // Now return the node objects.
+  $webforms = node_load_multiple($nids);
+  $body_content = '<p>Select the form you want to generate reports for:</p><p>';
+  foreach ($webforms as $webform) {
+    $link_url = 'admin/' . $webform->nid . '/filtered-form-results';
+    $url_alias = 'admin/' . str_replace(' ', '-', strtolower($webform->title)) . '/results';
+    $my_path = array(
+      'source' => $link_url,
+      'alias' => $url_alias,
+    );
+    path_save($my_path);
+    $body_content .= '<a href="/' . $url_alias . '">' . $webform->title . '</a><br>';
+  }
+  $body_content .= '</p>';
+  
+  $node->body[$node->language][0]['value'] = $body_content;
+  $node->body[$node->language][0]['format'] = 'full_html';
+  $node = node_submit($node);
+  node_save($node);
+  
+  $path = drupal_get_normal_path('admin/webform-reports');
+  $menu_item = array(
+    'link_path' => $path,
+    'link_title' => 'Webform Reports',
+    'menu_name' => 'management',
+    'weight' => 50,
+    'plid' => 19,
+  );
+  menu_link_save($menu_item);
+  variable_set('webform_report_nid', $node->nid);
+  cache_clear_all();
+}
+
+// ===============================
+// = Implements hook_uninstall() =
+// ===============================
+
+function filtered_form_results_uninstall() {
+  $nid = variable_get('webform_report_nid', '');
+  if (is_numeric($nid)) {
+    node_delete($nid);
+    variable_del('webform_report_nid');
+  }
+}

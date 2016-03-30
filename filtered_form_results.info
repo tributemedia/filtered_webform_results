@@ -1,0 +1,11 @@
+name = Filtered Form Results
+description = Provides a filtered view of webform submissions and a link to export to .xls.
+core = 7.x
+package = Features
+version = 7.x-1.0-alpha
+project = filtered_form_results
+dependencies[] = views
+dependencies[] = views_export_xls
+features[ctools][] = views:views_default:3.0
+features[features_api][] = api:1
+features[views_view][] = filtered_form_results

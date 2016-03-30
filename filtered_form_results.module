@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Filtered Form Results feature.
+ */
+
+include_once 'filtered_form_results.features.inc';
